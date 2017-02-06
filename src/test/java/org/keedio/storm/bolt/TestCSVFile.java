@@ -1,9 +1,5 @@
 package org.keedio.storm.bolt;
 
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,66 +9,170 @@ import org.junit.rules.ExpectedException;
 import org.keedio.storm.bolt.ConfigurationException;
 import org.keedio.storm.bolt.SyslogBolt;
 
-public class TestBoltConfiguration {
+public class TestCSVFile {
 	
 	@Rule
 	public ExpectedException expectedEx = ExpectedException.none();
 	
-	// PORT tests
-	@Test(expected = NumberFormatException.class)
-	public void notValidPort(){
+    // CSV tests
+	@Test
+	public void noHostPortAndProtocolInCSV(){
+		
+		expectedEx.expect(ConfigurationException.class);
+		expectedEx.expectMessage("Bad csvFile: host, port and protocol must be in headers");
+		
 		SyslogBolt sb = new SyslogBolt();
 		
-		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.port", "badPort");
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noHost.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
 	
 	@Test
-	public void portGreaterThanMaximumPort(){
+	public void hdfsRootNotValid(){
 		
-		expectedEx.expect(ConfigurationException.class);
-		expectedEx.expectMessage("Port must be between 1 and 65535");
+		expectedEx.expect(RuntimeException.class);
+		expectedEx.expectMessage("Incomplete HDFS URI, no host: badURI");
 		
 		SyslogBolt sb = new SyslogBolt();
 		
-		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.port", "70000");
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/dummyFile.csv");
+		stormConf.put("bolt.syslog.hdfsRoot", "badURI");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+
+	
+	@Test
+	public void localCSVfileNotExists(){
+		
+		expectedEx.expect(RuntimeException.class);
+		expectedEx.expectMessage("No such file or directory");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/notExists.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
 	
-	// HOST tests
 	@Test
-	public void hostNotSet(){
+	public void emptyCSV(){
 		
 		expectedEx.expect(ConfigurationException.class);
-		expectedEx.expectMessage("Destination host or csvFilePath must be specified in properties file");
+		expectedEx.expectMessage("Csv file empty!!");
 		
 		SyslogBolt sb = new SyslogBolt();
 		
-		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.protocol", "tcp");
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/emptyFile.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
 	
-	// PROTOCOL tests
 	@Test
-	public void incorrectProtocol(){
+	public void noHeaderInCSV(){
 		
 		expectedEx.expect(ConfigurationException.class);
-		expectedEx.expectMessage("Protocol must be TCP or UDP");
+		expectedEx.expectMessage("Bad csvFile: At least one KEY_ must be defined");
 		
 		SyslogBolt sb = new SyslogBolt();
 		
-		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.host", "localhost");
-		stormConf.put("bolt.syslog.protocol", "badProtocol");
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noHeader.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
+	
+	@Test
+	public void noKeyInHeaderCSV(){
+		
+		expectedEx.expect(ConfigurationException.class);
+		expectedEx.expectMessage("Bad csvFile: At least one KEY_ must be defined");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noKeyInHeader.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+	
+	@Test
+	public void onlyHeaderInCSV(){
+		
+		expectedEx.expect(ConfigurationException.class);
+		expectedEx.expectMessage("Bad csvFile: At least one line with values must exists");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/onlyHeader.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+		
+	@Test
+	public void numberOfHeadersAndValuesNotMatch(){
+		
+		expectedEx.expect(ConfigurationException.class);
+		expectedEx.expectMessage("Bad csvFile: Line (2) has 3 fields and 4 are expected.");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/headerAndValuesNotMatch.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+	
+	@Test
+	public void csvDuplicateKey(){
+		
+		expectedEx.expect(ConfigurationException.class);
+		expectedEx.expectMessage("CsvFile contains duplicate in line (3)");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/duplicateKey.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+	
+	@Test
+	public void badPortFormat(){
+		
+		expectedEx.expect(RuntimeException.class);
+		expectedEx.expectMessage("Number Format Exception: Check ports in csv file, line (2)");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/badPort.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+	
+	@Test
+	public void badPortRange(){
+		
+		expectedEx.expect(RuntimeException.class);
+		expectedEx.expectMessage("Port must be between 1 and 65535. Check line (2)");
+		
+		SyslogBolt sb = new SyslogBolt();
+		
+		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/badPortRange.csv");
+		
+		sb.prepare(stormConf, null, null);		
+	}
+	
+	
+	
 	
 	
 //	@Test
@@ -83,7 +183,7 @@ public class TestBoltConfiguration {
 //		
 //		SyslogBolt sb = new SyslogBolt();
 //		
-//		Map<String,String> stormConf = new HashMap<String,String>(1);
+//		Map<String,String> stormConf = new HashMap<String,String>();
 //		stormConf.put("bolt.syslog.csvFilePath", "resources/emptyCsv.csv");
 //		stormConf.put("bolt.syslog.hdfsRoot", "badURI");
 //		
@@ -98,7 +198,7 @@ public class TestBoltConfiguration {
 		
 		SyslogBolt sb = new SyslogBolt();
 		
-		Map<String,String> stormConf = new HashMap<String,String>(1);
+		Map<String,String> stormConf = new HashMap<String,String>();
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -108,7 +208,7 @@ public class TestBoltConfiguration {
 //	public void csvPathNotExists(){
 //		SyslogBolt sb = new SyslogBolt();
 //		
-//		Map<String,String> stormConf = new HashMap<String,String>(1);
+//		Map<String,String> stormConf = new HashMap<String,String>();
 //		stormConf.put("bolt.syslog.csvFilePath", "/tmp/12gs5342qjh/thisFileMustNotExists.csv");
 //		
 //		sb.prepare(stormConf, null, null);		
