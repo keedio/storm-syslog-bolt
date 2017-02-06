@@ -94,6 +94,7 @@ public class SyslogBolt extends BaseRichBolt {
 	    try {
 	    	if (sysLoggerList.isEmpty()){
 				syslogLogger.log(inputMessage);
+				syslogLogger.log(System.getProperty("line.separator"));
 				syslogLogger.flush();
 	    	}else{
 	    		if (!inputMessage.isEmpty()){
@@ -110,6 +111,7 @@ public class SyslogBolt extends BaseRichBolt {
 		    	    }
 		    	    if (sysLoggerList.containsKey(searchKey)){
 			    	    sysLoggerList.get(searchKey).log(inputMessage);
+			    	    sysLoggerList.get(searchKey).log(System.getProperty("line.separator"));
 			    	    sysLoggerList.get(searchKey).flush();
 		    	    }else{
 		    	    	LOG.error("Search key: " + searchKey + " .Not found in csv file");
