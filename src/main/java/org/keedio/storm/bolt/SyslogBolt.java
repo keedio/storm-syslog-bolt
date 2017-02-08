@@ -44,6 +44,7 @@ public class SyslogBolt extends BaseRichBolt {
             .getLogger(SyslogBolt.class);
 
     private String host, protocol;
+    private boolean isEnriched = false;
     private int port;
     private OutputCollector collector;
     private Syslogger syslogLogger;
@@ -59,7 +60,6 @@ public class SyslogBolt extends BaseRichBolt {
         	    syslogLogger.close();
         }
         catch (LoggingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
@@ -83,55 +83,90 @@ public class SyslogBolt extends BaseRichBolt {
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-    	return null;
+    	return super.getComponentConfiguration();
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void execute(Tuple input) {
     	
-    	String inputMessage = new String(input.getBinary(0));
+    	HashMap<String,Object> inputJson;
+    	HashMap<String,String> extraData = null;
+    	String message = new String(input.getBinary(0));
     	
-	    try {
-	    	if (sysLoggerList.isEmpty()){
-				syslogLogger.log(inputMessage);
-				syslogLogger.log(System.getProperty("line.separator"));
-				syslogLogger.flush();
-	    	}else{
-	    		if (!inputMessage.isEmpty()){
-		    	    
-		    	    HashMap<String,Object> inputJson = new ObjectMapper().readValue(inputMessage, HashMap.class);		    	    
-		    	    HashMap<String,String> extraData = (HashMap<String, String>) inputJson.get("extraData");
-		    	    
-		    	    String searchKey = "";
-		    	    for (int i=0; i<csvKeys.size(); i++){
-		    	    	searchKey += extraData.get(csvKeys.get(i));
-		    	    	if (i <  csvKeys.size()-1){
-		    	    		searchKey += "_";
-		    	    	}
-		    	    }
+    	if (isEnriched){
+        	try {
+	    	    inputJson = new ObjectMapper().readValue(message, HashMap.class);		    	    
+	    	    extraData = (HashMap<String, String>) inputJson.get("extraData");
+	    		message = (String) inputJson.get("message");
+        	} catch (IOException e) {
+        		collector.reportError(e);
+        		collector.ack(input);
+    			e.printStackTrace();
+        	}
+    	}
+
+    	if (sysLoggerList.isEmpty()){
+    		try{
+    			syslogLogger.log(message);
+    			syslogLogger.flush();
+    		} catch (LoggingException e) {
+    			collector.fail(input);
+    			reconnectSyslogConnection(syslogLogger);
+    			e.printStackTrace();
+    		}
+    	}else if (isEnriched){
+    		if (!message.isEmpty()){
+    	    	String searchKey = "";
+	    	    
+	    	    for (int i=0; i<csvKeys.size(); i++){
+	    	    	searchKey += extraData.get(csvKeys.get(i));
+	    	    	if (i <  csvKeys.size()-1){
+	    	    		searchKey += "_";
+	    	    	}
+	    	    }
+	    	    try{
 		    	    if (sysLoggerList.containsKey(searchKey)){
-			    	    sysLoggerList.get(searchKey).log(inputMessage);
-			    	    sysLoggerList.get(searchKey).log(System.getProperty("line.separator"));
+			    	    sysLoggerList.get(searchKey).log(message);
 			    	    sysLoggerList.get(searchKey).flush();
 		    	    }else{
 		    	    	LOG.error("Search key: " + searchKey + " .Not found in csv file");
 		    	    }
+	    	    } catch (LoggingException e) {
+	    	    	try {
+	    	    		collector.fail(input);
+	    				collector.wait(5000);
+		    			reconnectSyslogConnection(sysLoggerList.get(searchKey));
+		    			e.printStackTrace();
+	    			} catch (InterruptedException e1) {
+	    				throw new RuntimeException(e1);
+	    			}
 	    		}
-	    	}
-		} catch (LoggingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    		}
+    	}else{
+    		throw new RuntimeException("To use csv endopoint file, syslog.bolt.enriched must be setted to true");
+       	}
+    	
 	    collector.ack(input);
     }
 
+	private boolean reconnectSyslogConnection(Syslogger syslogLogger) {
+		
+		try {
+			syslogLogger.reset();
+		} catch (LoggingException e){
+			e.printStackTrace();
+		}
+		return true;		
+	}
+
 	private void loadBoltProperties(final Map<String, String> stormConf) throws IOException, ConfigurationException, URISyntaxException {
     	
-	    	host = (String) stormConf.get("bolt.syslog.host");
-	    	Object portObj = stormConf.get("bolt.syslog.port");
+	    	host = (String) stormConf.get("syslog.bolt.host");
+	    	Object portObj = stormConf.get("syslog.bolt.port");
+	    	
+			if (stormConf.get("syslog.bolt.enriched") != null && stormConf.get("syslog.bolt.enriched").equals("true"))
+				isEnriched=true;
 	    	
 	    	if (portObj == null)
 	    		port = 514;
@@ -141,19 +176,22 @@ public class SyslogBolt extends BaseRichBolt {
 	    			throw new ConfigurationException("Port must be between 1 and 65535");
 	    	}
 	    	
-	    	if (stormConf.get("bolt.syslog.protocol") == null)
+	    	if (stormConf.get("syslog.bolt.protocol") == null)
 	    		protocol = "TCP";
 	    	else {
-		    	protocol = ((String) stormConf.get("bolt.syslog.protocol")).toUpperCase();
+		    	protocol = ((String) stormConf.get("syslog.bolt.protocol")).toUpperCase();
 		    	if (!(protocol.equals("TCP") || protocol.equals("UDP"))){
 		    		throw new ConfigurationException("Protocol must be TCP or UDP");
 		    	}
 	    	}
 	    	
-	    	final String csvFilePath = (String) stormConf.get("bolt.syslog.csvFilePath");    	
-	    	final String hdfsRoot = (String) stormConf.get("bolt.syslog.hdfsRoot");
+	    	final String csvFilePath = (String) stormConf.get("syslog.bolt.csvFilePath");    	
+	    	final String hdfsRoot = (String) stormConf.get("syslog.bolt.hdfsRoot");
 	    	
 	    	if (csvFilePath != null && csvFilePath.length() > 0){
+	    		if (!isEnriched)
+	    			throw new ConfigurationException("To use csv endopoint file, syslog.bolt.enriched must be setted to true");
+	    		
 	    		loadCsvFileContent(csvFilePath,hdfsRoot);
 	    	}
     }
@@ -292,17 +330,17 @@ public class SyslogBolt extends BaseRichBolt {
 				String protocol = hostPortEndpointMap.get(key).get("protocol");
 				
 				if (protocol.equals("TCP"))
-					sysLoggerList.put(key, new ReusingTCPSyslogger(host, Integer.parseInt(port)));
+					sysLoggerList.put(key, new ReusingTCPSyslogger(host, Integer.parseInt(port)).setTerminator(System.getProperty("line.separator")).setTag(""));
 				else if (protocol.equals("UDP"))
-					sysLoggerList.put(key, new UDPSyslogger(host, Integer.parseInt(port)));
+					sysLoggerList.put(key, new UDPSyslogger(host, Integer.parseInt(port)).setTerminator(System.getProperty("line.separator")).setTag(""));
 				else
 					throw new ConfigurationException("Not valid protocol in file. Programmer review sanity checking!");
 			}
 		}else{
 			if (protocol.equals("TCP"))
-				syslogLogger = new ReusingTCPSyslogger(host, port);
+				syslogLogger = new ReusingTCPSyslogger(host, port).setTerminator(System.getProperty("line.separator")).setTag("");
 			else if (protocol.equals("UDP"))
-				syslogLogger = new UDPSyslogger(host, port);
+				syslogLogger = new UDPSyslogger(host, port).setTerminator(System.getProperty("line.separator")).setTag("");
 			else
 				throw new ConfigurationException("Not valid protocol in file. Programmer review sanity checking!");
 			
