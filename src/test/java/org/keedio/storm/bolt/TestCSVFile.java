@@ -9,6 +9,8 @@ import org.junit.rules.ExpectedException;
 import org.keedio.storm.bolt.ConfigurationException;
 import org.keedio.storm.bolt.SyslogBolt;
 
+import static org.keedio.storm.bolt.SyslogBoltProperties.*;
+
 public class TestCSVFile {
 	
 	@Rule
@@ -24,7 +26,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noHost.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noHost.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -38,8 +41,9 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/dummyFile.csv");
-		stormConf.put("bolt.syslog.hdfsRoot", "badURI");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/dummyFile.csv");
+		stormConf.put(SYSLOG_BOLT_HDFS_ROOT, "badURI");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -54,7 +58,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/notExists.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/notExists.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -68,7 +73,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/emptyFile.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/emptyFile.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -82,7 +88,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noHeader.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noHeader.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -96,7 +103,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/noKeyInHeader.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noKeyInHeader.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -110,7 +118,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/onlyHeader.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/onlyHeader.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -124,7 +133,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/headerAndValuesNotMatch.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/headerAndValuesNotMatch.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -138,7 +148,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/duplicateKey.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/duplicateKey.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -152,7 +163,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/badPort.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/badPort.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -166,7 +178,8 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
-		stormConf.put("bolt.syslog.csvFilePath", "src/test/resources/badPortRange.csv");
+		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
+		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/badPortRange.csv");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -184,8 +197,8 @@ public class TestCSVFile {
 //		SyslogBolt sb = new SyslogBolt();
 //		
 //		Map<String,String> stormConf = new HashMap<String,String>();
-//		stormConf.put("bolt.syslog.csvFilePath", "resources/emptyCsv.csv");
-//		stormConf.put("bolt.syslog.hdfsRoot", "badURI");
+//		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "resources/emptyCsv.csv");
+//		stormConf.put(SYSLOG_BOLT_HDFS_ROOT, "badURI");
 //		
 //		sb.prepare(stormConf, null, null);		
 //	}
@@ -209,7 +222,7 @@ public class TestCSVFile {
 //		SyslogBolt sb = new SyslogBolt();
 //		
 //		Map<String,String> stormConf = new HashMap<String,String>();
-//		stormConf.put("bolt.syslog.csvFilePath", "/tmp/12gs5342qjh/thisFileMustNotExists.csv");
+//		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "/tmp/12gs5342qjh/thisFileMustNotExists.csv");
 //		
 //		sb.prepare(stormConf, null, null);		
 //	}

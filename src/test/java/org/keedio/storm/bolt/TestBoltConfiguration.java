@@ -1,9 +1,5 @@
 package org.keedio.storm.bolt;
 
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +8,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.keedio.storm.bolt.ConfigurationException;
 import org.keedio.storm.bolt.SyslogBolt;
+
+import static org.keedio.storm.bolt.SyslogBoltProperties.*;
 
 public class TestBoltConfiguration {
 	
@@ -24,7 +22,7 @@ public class TestBoltConfiguration {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.port", "badPort");
+		stormConf.put(SYSLOG_BOLT_PORT, "badPort");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -38,7 +36,7 @@ public class TestBoltConfiguration {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.port", "70000");
+		stormConf.put(SYSLOG_BOLT_PORT, "70000");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -53,7 +51,7 @@ public class TestBoltConfiguration {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.protocol", "tcp");
+		stormConf.put(SYSLOG_BOLT_PROTOCOL, "tcp");
 		
 		sb.prepare(stormConf, null, null);		
 	}
@@ -68,10 +66,10 @@ public class TestBoltConfiguration {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>(1);
-		stormConf.put("bolt.syslog.host", "localhost");
-		stormConf.put("bolt.syslog.protocol", "badProtocol");
+		stormConf.put(SYSLOG_BOLT_HOST, "localhost");
+		stormConf.put(SYSLOG_BOLT_PROTOCOL, "badProtocol");
 		
-		sb.prepare(stormConf, null, null);		
+		sb.prepare(stormConf, null, null);
 	}
 	
 	
