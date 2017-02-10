@@ -21,7 +21,7 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
-import org.codehaus.jackson.map.ObjectMapper;
+
 import org.scoja.client.Syslogger;
 import org.scoja.client.UDPSyslogger;
 import org.scoja.client.LoggingException;
@@ -34,7 +34,12 @@ import org.apache.hadoop.conf.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.opencsv.CSVReader;
+
+import static org.keedio.storm.bolt.SyslogBoltProperties.*;
 
 public class SyslogBolt extends BaseRichBolt {
 
@@ -90,16 +95,19 @@ public class SyslogBolt extends BaseRichBolt {
 	@Override
     public void execute(Tuple input) {
     	
-    	HashMap<String,Object> inputJson;
-    	HashMap<String,String> extraData = null;
+    	Map<String, Object> inputJson;
+    	Map<String,String> extraData = null;
     	String message = new String(input.getBinary(0));
     	
     	if (isEnriched){
         	try {
-	    	    inputJson = new ObjectMapper().readValue(message, HashMap.class);		    	    
-	    	    extraData = (HashMap<String, String>) inputJson.get("extraData");
+				Gson gson = new GsonBuilder().create();
+				inputJson = gson.fromJson(message,Map.class);
+	    	    
+				//inputJson = new ObjectMapper().readValue(message, Map.class);		    	    
+	    	    extraData = (Map<String, String>) inputJson.get("extraData");
 	    		message = (String) inputJson.get("message");
-        	} catch (IOException e) {
+        	} catch (JsonSyntaxException e) {
         		collector.reportError(e);
         		collector.ack(input);
     			e.printStackTrace();
@@ -162,10 +170,10 @@ public class SyslogBolt extends BaseRichBolt {
 
 	private void loadBoltProperties(final Map<String, String> stormConf) throws IOException, ConfigurationException, URISyntaxException {
     	
-	    	host = (String) stormConf.get("syslog.bolt.host");
-	    	Object portObj = stormConf.get("syslog.bolt.port");
+	    	host = (String) stormConf.get(SYSLOG_BOLT_HOST);
+	    	Object portObj = stormConf.get(SYSLOG_BOLT_PORT);
 	    	
-			if (stormConf.get("syslog.bolt.enriched") != null && stormConf.get("syslog.bolt.enriched").equals("true"))
+			if (stormConf.get(SYSLOG_BOLT_ENRICHED) != null && stormConf.get(SYSLOG_BOLT_ENRICHED).equals("true"))
 				isEnriched=true;
 	    	
 	    	if (portObj == null)
@@ -176,17 +184,17 @@ public class SyslogBolt extends BaseRichBolt {
 	    			throw new ConfigurationException("Port must be between 1 and 65535");
 	    	}
 	    	
-	    	if (stormConf.get("syslog.bolt.protocol") == null)
+	    	if (stormConf.get(SYSLOG_BOLT_PROTOCOL) == null)
 	    		protocol = "TCP";
 	    	else {
-		    	protocol = ((String) stormConf.get("syslog.bolt.protocol")).toUpperCase();
+		    	protocol = ((String) stormConf.get(SYSLOG_BOLT_PROTOCOL)).toUpperCase();
 		    	if (!(protocol.equals("TCP") || protocol.equals("UDP"))){
 		    		throw new ConfigurationException("Protocol must be TCP or UDP");
 		    	}
 	    	}
 	    	
-	    	final String csvFilePath = (String) stormConf.get("syslog.bolt.csvFilePath");    	
-	    	final String hdfsRoot = (String) stormConf.get("syslog.bolt.hdfsRoot");
+	    	final String csvFilePath = (String) stormConf.get(SYSLOG_BOLT_CSV_FILE_PATH);    	
+	    	final String hdfsRoot = (String) stormConf.get(SYSLOG_BOLT_HDFS_ROOT);
 	    	
 	    	if (csvFilePath != null && csvFilePath.length() > 0){
 	    		if (!isEnriched)
