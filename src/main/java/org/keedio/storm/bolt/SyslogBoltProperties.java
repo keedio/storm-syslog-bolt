@@ -1,6 +1,7 @@
 package org.keedio.storm.bolt;
 
 public class SyslogBoltProperties {
+	static final String SYSLOG_BOLT_DYNAMIC_ENDPOINT = "syslog.bolt.dynamic.endpoint";
 	static final String SYSLOG_BOLT_HOST = "syslog.bolt.host";
     static final String SYSLOG_BOLT_PORT = "syslog.bolt.port";
 	static final String SYSLOG_BOLT_ENRICHED = "syslog.bolt.enriched";
