@@ -26,6 +26,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noHost.csv");
 		
@@ -41,6 +42,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/dummyFile.csv");
 		stormConf.put(SYSLOG_BOLT_HDFS_ROOT, "badURI");
@@ -58,6 +60,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/notExists.csv");
 		
@@ -73,6 +76,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/emptyFile.csv");
 		
@@ -88,6 +92,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noHeader.csv");
 		
@@ -103,6 +108,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/noKeyInHeader.csv");
 		
@@ -118,6 +124,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/onlyHeader.csv");
 		
@@ -133,6 +140,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/headerAndValuesNotMatch.csv");
 		
@@ -148,6 +156,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/duplicateKey.csv");
 		
@@ -163,6 +172,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/badPort.csv");
 		
@@ -178,6 +188,7 @@ public class TestCSVFile {
 		SyslogBolt sb = new SyslogBolt();
 		
 		Map<String,String> stormConf = new HashMap<String,String>();
+		stormConf.put(SYSLOG_BOLT_DYNAMIC_ENDPOINT, "true");
 		stormConf.put(SYSLOG_BOLT_ENRICHED, "true");
 		stormConf.put(SYSLOG_BOLT_CSV_FILE_PATH, "src/test/resources/badPortRange.csv");
 		
