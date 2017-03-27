@@ -21,11 +21,14 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
+import org.productivity.java.syslog4j.Syslog;
+import org.productivity.java.syslog4j.SyslogIF;
+import org.productivity.java.syslog4j.SyslogRuntimeException;
 
-import org.scoja.client.Syslogger;
-import org.scoja.client.UDPSyslogger;
-import org.scoja.client.LoggingException;
-import org.scoja.client.ReusingTCPSyslogger;
+//import org.scoja.client.Syslogger;
+//import org.scoja.client.UDPSyslogger;
+//import org.scoja.client.LoggingException;
+//import org.scoja.client.ReusingTCPSyslogger;
 
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -52,8 +55,10 @@ public class SyslogBolt extends BaseRichBolt {
     private boolean isEnriched = false;
     private int port;
     private OutputCollector collector;
-    private Syslogger syslogLogger;
-    private Map<String,Syslogger> sysLoggerList = new HashMap<String,Syslogger>();
+    private SyslogIF syslogLogger;
+    //private Syslogger syslogLogger;
+    //private Map<String,Syslogger> sysLoggerList = new HashMap<String,Syslogger>();
+    private Map<String,SyslogIF> sysLoggerList = new HashMap<String,SyslogIF>();
     private Map<String,Map<String,String>> hostPortEndpointMap = new HashMap<String,Map<String,String>>();
     private List<String> csvKeys;
 
@@ -62,9 +67,9 @@ public class SyslogBolt extends BaseRichBolt {
     public void cleanup() {
         try {
         	if (syslogLogger != null)
-        	    syslogLogger.close();
+        	    syslogLogger.shutdown();
         }
-        catch (LoggingException e) {
+        catch (SyslogRuntimeException e) {
 			e.printStackTrace();
 		}
     }
@@ -114,9 +119,9 @@ public class SyslogBolt extends BaseRichBolt {
 
     	if (sysLoggerList.isEmpty()){
     		try{
-    			syslogLogger.log(message);
+    			syslogLogger.info(message);
     			syslogLogger.flush();
-    		} catch (LoggingException e) {
+    		} catch (SyslogRuntimeException e) {
     			collector.fail(input);
     			reconnectSyslogConnection(syslogLogger);
     			e.printStackTrace();
@@ -133,12 +138,12 @@ public class SyslogBolt extends BaseRichBolt {
 	    	    }
 	    	    try{
 		    	    if (sysLoggerList.containsKey(searchKey)){
-			    	    sysLoggerList.get(searchKey).log(message);
+			    	    sysLoggerList.get(searchKey).info(message);
 			    	    sysLoggerList.get(searchKey).flush();
 		    	    }else{
 		    	    	LOG.error("Search key: " + searchKey + " .Not found in csv file");
 		    	    }
-                } catch (LoggingException e) {
+                } catch (SyslogRuntimeException e) {
                     collector.reportError(e);
                     collector.fail(input);
                     LOG.error("Connection with server lost");
@@ -152,7 +157,7 @@ public class SyslogBolt extends BaseRichBolt {
         collector.ack(input);
     }
 
-    private void reconnectSyslogConnection(Syslogger syslogLogger) {
+    private void reconnectSyslogConnection(SyslogIF syslogLogger) {
         
         int retryDelayMs = 1000;
         boolean connected = false;
@@ -160,9 +165,10 @@ public class SyslogBolt extends BaseRichBolt {
         while (!connected) {
         
             try {
-                syslogLogger.reset();
+                syslogLogger.shutdown();
+                syslogLogger.initialize(syslogLogger.getProtocol(), syslogLogger.getConfig());
                 connected=true;
-            } catch (LoggingException e){
+            } catch (SyslogRuntimeException e){
                 try{
                     Thread.sleep(retryDelayMs);
                     if (retryDelayMs < 10000)
@@ -347,18 +353,21 @@ public class SyslogBolt extends BaseRichBolt {
                 String port = hostPortEndpointMap.get(key).get("port");
                 String protocol = hostPortEndpointMap.get(key).get("protocol");
                 
-                if (protocol.equals("TCP"))
-                    sysLoggerList.put(key, new ReusingTCPSyslogger(host, Integer.parseInt(port)).setTerminator(System.getProperty("line.separator")).setTag(""));
-                else if (protocol.equals("UDP"))
-                    sysLoggerList.put(key, new UDPSyslogger(host, Integer.parseInt(port)).setTerminator(System.getProperty("line.separator")).setTag(""));
+                if (protocol.equals("TCP") || protocol.equals("UDP")){
+                	SyslogIF syslog = Syslog.getInstance(protocol);
+                	syslog.getConfig().setHost(host);
+                	syslog.getConfig().setPort(Integer.parseInt(port));
+                    sysLoggerList.put(key, syslog);
+                }
                 else
                     throw new ConfigurationException("Not valid protocol in file. Programmer review sanity checking!");
             }
         }else{
-            if (protocol.equals("TCP"))
-                syslogLogger = new ReusingTCPSyslogger(host, port).setTerminator(System.getProperty("line.separator")).setTag("");
-            else if (protocol.equals("UDP"))
-                syslogLogger = new UDPSyslogger(host, port).setTerminator(System.getProperty("line.separator")).setTag("");
+        	if (protocol.equals("TCP") || protocol.equals("UDP")){
+        		syslogLogger = Syslog.getInstance(protocol);
+        		syslogLogger.getConfig().setHost(host);
+        		syslogLogger.getConfig().setPort(port);
+            }
             else
                 throw new ConfigurationException("Not valid protocol in file. Programmer review sanity checking!");
             
