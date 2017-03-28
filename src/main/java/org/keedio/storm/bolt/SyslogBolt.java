@@ -34,7 +34,6 @@ import org.apache.hadoop.conf.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cloudbees.syslog.MessageFormat;
 import com.cloudbees.syslog.sender.AbstractSyslogMessageSender;
 import com.cloudbees.syslog.sender.TcpSyslogMessageSender;
 import com.cloudbees.syslog.sender.UdpSyslogMessageSender;
@@ -383,14 +382,14 @@ public class SyslogBolt extends BaseRichBolt {
         		tcpSyslogLogger = new TcpSyslogMessageSender();
         		tcpSyslogLogger.setSyslogServerHostname(host);
         		tcpSyslogLogger.setSyslogServerPort(port);
-        		//tcpSyslogLogger.setMessageFormat(MessageFormat.RFC_5424);
+        		tcpSyslogLogger.setDefaultAppName("");
         		tcpSyslogLogger.setMaxRetryCount(Integer.MAX_VALUE);
             }
         	else if (protocol.equals("UDP")){
         		udpSyslogLogger = new UdpSyslogMessageSender();
         		udpSyslogLogger.setSyslogServerHostname(host);
         		udpSyslogLogger.setSyslogServerPort(port);
-        		//udpSyslogLogger.setMessageFormat(MessageFormat.RFC_5424);
+        		udpSyslogLogger.setDefaultAppName("");
         	}
             else
                 throw new ConfigurationException("Not valid protocol in file. Programmer review sanity checking!");

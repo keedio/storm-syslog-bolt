@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.keedio.storm.bolt</groupId>
     <artifactId>storm-syslog-bolt</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>storm-syslog-bolt</name>
@@ -53,7 +53,7 @@
 		<dependency>
 		    <groupId>com.cloudbees</groupId>
 		    <artifactId>syslog-java-client</artifactId>
-		    <version>1.0.8</version>
+		    <version>1.0.9-SNAPSHOT</version>
 		</dependency>
         <dependency>
 		    <groupId>org.apache.hadoop</groupId>
